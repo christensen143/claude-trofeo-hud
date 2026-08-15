@@ -4,6 +4,8 @@ A desk HUD that shows live Claude usage on a Thermalright Trofeo Vision 6.86"
 LCD (1280×480, USB-C, ~$38), driven from macOS. Inspired by the r/ClaudeAI
 "$38 Claude LCD Table Display" post.
 
+![Live HUD render — session/weekly limit gauges, today's tokens and cost, current session activity, hourly burn sparkline](docs/hud.png)
+
 What it shows: Pro/Max session + weekly limit bars with reset countdowns
 (from Anthropic's usage endpoint), today's tokens and hypothetical API cost
 (via [ccusage](https://github.com/ryoppippi/ccusage)), the live session
