@@ -1,0 +1,11 @@
+# claude-trofeo-hud configuration (all fields optional)
+
+fps = 2.0
+jpeg_quality = 90
+
+[night]
+# "on" = always normal, "dim" = dimmed during quiet hours, "off" = black screen
+mode = "off"
+start = "00:00"
+end = "07:00"
+dim_factor = 0.3

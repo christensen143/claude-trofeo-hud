@@ -1,0 +1,36 @@
+[project]
+name = "claude-trofeo-hud"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Chris Christensen", email = "chris@varlogchris.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "hidapi>=0.15.0",
+    "pillow>=12.3.0",
+    "trcc-linux>=9.9.8",
+]
+
+[project.scripts]
+claude-trofeo-hud = "claude_trofeo_hud.__main__:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+# The HUD renders wall-clock local time on purpose; naive-datetime (DTZ)
+# pedantry doesn't apply.
+ignore = ["E501"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.3",
+]
