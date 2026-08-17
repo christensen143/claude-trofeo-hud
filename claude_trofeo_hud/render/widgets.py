@@ -9,7 +9,8 @@ Box = tuple[int, int, int, int]  # x0, y0, x1, y1
 
 
 def progress_bar(d: ImageDraw.ImageDraw, box: Box, pct: float,
-                 color: str, track: str = theme.PANEL) -> None:
+                 color: str, track: str = theme.PANEL,
+                 marker_pct: float | None = None) -> None:
     x0, y0, x1, y1 = box
     r = (y1 - y0) // 2
     d.rounded_rectangle(box, radius=r, fill=track, outline=theme.BORDER)
@@ -19,6 +20,16 @@ def progress_bar(d: ImageDraw.ImageDraw, box: Box, pct: float,
         d.rounded_rectangle((x0, y0, x0 + fill_w, y1), radius=r, fill=color)
     elif fill_w > 0:
         d.ellipse((x0, y0, x0 + max(fill_w, 2 * r), y1), fill=color)
+
+    if marker_pct is not None:
+        marker_pct = max(0.0, min(100.0, marker_pct))
+        marker_x = round(x0 + (x1 - x0) * marker_pct / 100)
+        marker_x = max(x0 + 1, min(x1 - 1, marker_x))
+        d.line(
+            (marker_x, y0 - 4, marker_x, y1 + 4),
+            fill=theme.FG,
+            width=3,
+        )
 
 
 def sparkline(d: ImageDraw.ImageDraw, box: Box, values: list[int],

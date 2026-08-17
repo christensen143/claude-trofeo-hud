@@ -1,6 +1,8 @@
 """render(state) -> 1280x480 PIL image. Pure function of HudState."""
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+
 from PIL import Image, ImageDraw
 
 from .. import theme
@@ -8,6 +10,10 @@ from ..state import HudState, LimitGauge
 from . import widgets as w
 
 WIDTH, HEIGHT = 1280, 480
+
+# Elapsed time windows
+_SESSION_WINDOW = timedelta(hours=5)
+_WEEK_WINDOW = timedelta(days=7)
 
 # Zone x-boundaries (three columns + full-width footer strip)
 _COL1 = 470          # limits
@@ -33,6 +39,15 @@ def render(state: HudState) -> Image.Image:
     return img
 
 
+# ── Helpers ──────────────────────────────────────────────────────────────
+
+def _elapsed_window_pct(now: datetime, resets_at: datetime,
+                        duration: timedelta) -> float:
+    remaining = (resets_at - now).total_seconds()
+    elapsed = 100.0 * (1.0 - remaining / duration.total_seconds())
+    return max(0.0, min(100.0, elapsed))
+
+
 # ── Zones ────────────────────────────────────────────────────────────────
 
 def _limits_zone(d: ImageDraw.ImageDraw, state: HudState,
@@ -44,7 +59,7 @@ def _limits_zone(d: ImageDraw.ImageDraw, state: HudState,
     d.text((x1 - _PAD, 34), "USAGE" + (" (stale)" if lim.stale else ""),
            font=theme.sans(18), fill=color_hdr, anchor="ra")
 
-    def gauge(g: LimitGauge | None, y: int) -> None:
+    def gauge(g: LimitGauge | None, y: int, duration: timedelta) -> None:
         if g is None:
             d.text((x, y), "—", font=theme.mono(22), fill=theme.FAINT)
             return
@@ -52,15 +67,22 @@ def _limits_zone(d: ImageDraw.ImageDraw, state: HudState,
         d.text((x, y), g.label, font=theme.sans(22), fill=theme.MUTED)
         d.text((x1 - _PAD, y - 14), f"{g.used_pct:.0f}%",
                font=theme.mono(44), fill=color, anchor="ra")
-        w.progress_bar(d, (x, y + 38, x1 - _PAD, y + 60), g.used_pct, color)
+        marker_pct = (
+            _elapsed_window_pct(state.now, g.resets_at, duration)
+            if g.resets_at else None
+        )
+        w.progress_bar(
+            d, (x, y + 38, x1 - _PAD, y + 60), g.used_pct, color,
+            marker_pct=marker_pct,
+        )
         if g.resets_at:
             secs = (g.resets_at - state.now).total_seconds()
             d.text((x, y + 70),
                    f"resets {g.resets_at:%-I:%M %p} · {w.fmt_countdown(secs)}",
                    font=theme.mono(19), fill=theme.FAINT)
 
-    gauge(lim.session, 108)
-    gauge(lim.weekly, 258)
+    gauge(lim.session, 108, _SESSION_WINDOW)
+    gauge(lim.weekly, 258, _WEEK_WINDOW)
 
 
 def _tokens_zone(d: ImageDraw.ImageDraw, state: HudState,
