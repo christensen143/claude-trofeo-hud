@@ -16,8 +16,18 @@ What it shows: Pro/Max session + weekly limit bars with reset countdowns
 - macOS, Python 3.12+, [uv](https://docs.astral.sh/uv/), Node (for `npx ccusage`)
 - `brew install hidapi` (C library behind the `hidapi` Python package)
 - Claude Code installed and logged in (the HUD reads its local logs and its
-  OAuth token from the Keychain — read-only, nothing leaves your machine
-  except the usage query to api.anthropic.com)
+  OAuth token from the Keychain — read-only, and the only thing sent anywhere
+  is the usage query to api.anthropic.com)
+
+### A note on `ccusage`
+
+Token and cost figures come from [ccusage](https://github.com/ryoppippi/ccusage),
+third-party code that the daemon executes via `npx` every 60 seconds. It is
+pinned to an exact version in `collectors/tokens.py`, so upgrading it is a
+deliberate, reviewable change rather than something that happens on its own —
+worth knowing, since the daemon runs with standing Keychain access. With a warm
+npm cache the run needs no network, but resolving the package can reach the
+registry when that cache goes stale.
 
 ## Setup
 
