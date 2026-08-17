@@ -67,11 +67,16 @@ def _tokens_zone(d: ImageDraw.ImageDraw, state: HudState,
                  x0: int, x1: int) -> None:
     x = x0 + _PAD
     t = state.tokens
+    hdr_color = theme.STALE if t.stale else theme.MUTED
     d.text((x, 26), "TODAY" + (" (stale)" if t.stale else ""),
-           font=theme.sans(18), fill=theme.STALE if t.stale else theme.MUTED)
+           font=theme.sans(18), fill=hdr_color)
     d.text((x, 56), f"${t.today_cost_usd:,.2f}",
-           font=theme.sans(72), fill=theme.FG)
-    d.text((x, 148), "hypothetical API cost",
+           font=theme.sans(44), fill=theme.FG)
+    d.text((x1 - _PAD, 26), "MONTH", font=theme.sans(18), fill=hdr_color,
+           anchor="ra")
+    d.text((x1 - _PAD, 56), f"${t.month_cost_usd:,.0f}",
+           font=theme.sans(44), fill=theme.FG, anchor="ra")
+    d.text((x, 112), "hypothetical API cost",
            font=theme.sans(17), fill=theme.FAINT)
 
     d.text((x, 196), f"{w.fmt_tokens(t.today_tokens)} tokens · "
