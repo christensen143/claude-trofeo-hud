@@ -43,7 +43,16 @@ def _local_naive(iso: str | None) -> datetime | None:
 
 class LimitsCollector(Collector):
     name_ = "limits"
-    cadence_s = 60.0
+    # The usage endpoint admits roughly one call every two minutes. At a 60s
+    # cadence it refuses every other poll with HTTP 429 — measured over a
+    # 5-hour run: 103 of 145 failures were exactly 120s apart, i.e. one
+    # success, one refusal, repeating. The 429 carries no rate-limit metadata
+    # and `Retry-After: 0`, so there is nothing to pace against; the only fix
+    # is to poll slower than the limiter.
+    #
+    # Nothing on the panel suffers: utilization moves slowly, and the reset
+    # countdowns are computed client-side from `resets_at` on every frame.
+    cadence_s = 300.0
 
     def refresh(self) -> None:
         req = urllib.request.Request(_USAGE_URL, headers={
