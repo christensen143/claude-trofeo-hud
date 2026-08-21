@@ -6,12 +6,14 @@ panel            — stream MOCK frames to the LCD (layout demo)
 install-agent    — launchd LaunchAgent: start at login, restart on crash
 uninstall-agent  — stop and remove the LaunchAgent
 """
+
 from __future__ import annotations
 
 import argparse
 import logging
 import logging.handlers
 import time
+from pathlib import Path
 
 from .config import load as load_config
 from .render.layout import render
@@ -25,8 +27,9 @@ def main() -> int:
 
     prev = sub.add_parser("preview", help="render one frame to a PNG")
     prev.add_argument("out", nargs="?", default="out/preview.png")
-    prev.add_argument("--live", action="store_true",
-                      help="use live collectors instead of mock data")
+    prev.add_argument(
+        "--live", action="store_true", help="use live collectors instead of mock data"
+    )
 
     pan = sub.add_parser("panel", help="stream MOCK frames to the LCD")
     pan.add_argument("--seconds", type=float, default=0)
@@ -43,14 +46,18 @@ def main() -> int:
     _setup_logging(cfg, verbose=args.verbose, to_file=args.cmd == "run")
 
     if args.cmd == "preview":
-        state = (_start_collectors(wait=True).snapshot() if args.live
-                 else mock_state())
-        render(state).save(args.out)
-        print(f"wrote {args.out}")
+        state = _start_collectors(wait=True).snapshot() if args.live else mock_state()
+        out = Path(args.out)
+        # `out/` is gitignored, so it does not exist in a fresh clone — and
+        # preview is the first command the README tells a new user to run.
+        out.parent.mkdir(parents=True, exist_ok=True)
+        render(state).save(out)
+        print(f"wrote {out}")
         return 0
 
     if args.cmd == "panel":
         from .display.panel import TrofeoPanel
+
         panel = TrofeoPanel()
         panel.connect()
         deadline = time.time() + args.seconds if args.seconds else None
@@ -67,6 +74,7 @@ def main() -> int:
 
     if args.cmd == "run":
         from .app import run_loop
+
         shared = _start_collectors()
         try:
             run_loop(shared, cfg, stop_after_s=args.seconds)
@@ -75,6 +83,7 @@ def main() -> int:
         return 0
 
     from . import agent
+
     if args.cmd == "install-agent":
         agent.install(cfg.log_dir)
     else:
@@ -86,8 +95,11 @@ def _setup_logging(cfg, verbose: bool, to_file: bool) -> None:
     handlers: list[logging.Handler] = [logging.StreamHandler()]
     if to_file:
         cfg.log_dir.mkdir(parents=True, exist_ok=True)
-        handlers.append(logging.handlers.RotatingFileHandler(
-            cfg.log_dir / "hud.log", maxBytes=1_000_000, backupCount=3))
+        handlers.append(
+            logging.handlers.RotatingFileHandler(
+                cfg.log_dir / "hud.log", maxBytes=1_000_000, backupCount=3
+            )
+        )
     logging.basicConfig(
         level=logging.DEBUG if verbose else logging.INFO,
         format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
