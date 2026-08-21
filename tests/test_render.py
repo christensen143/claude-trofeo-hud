@@ -38,3 +38,11 @@ def test_fmt_countdown():
     assert w.fmt_countdown(4 * 3600 + 45 * 60) == "4h 45m"
     assert w.fmt_countdown(2 * 86400 + 9 * 3600) == "2d 9h"
     assert w.fmt_countdown(-5) == "0m"
+
+
+def test_render_shows_month_cost():
+    state = mock_state(datetime(2026, 8, 15, 17, 0))
+    img_a = render(state)
+    state.tokens.month_cost_usd += 111.0
+    img_b = render(state)
+    assert img_a.tobytes() != img_b.tobytes()

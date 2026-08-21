@@ -35,6 +35,7 @@ class TokenStats:
     session_count: int = 0
     week_tokens: int = 0
     week_cost_usd: float = 0.0
+    month_cost_usd: float = 0.0
     stale: bool = False
 
 
@@ -76,6 +77,7 @@ def mock_state(now: datetime | None = None) -> HudState:
             session_count=38,
             week_tokens=612_000_000,
             week_cost_usd=581.20,
+            month_cost_usd=1_842.00,
         ),
         activity=Activity(
             project="claude-trofeo-hud",
