@@ -12,6 +12,7 @@ import argparse
 import logging
 import logging.handlers
 import time
+from pathlib import Path
 
 from .config import load as load_config
 from .render.layout import render
@@ -45,6 +46,7 @@ def main() -> int:
     if args.cmd == "preview":
         state = (_start_collectors(wait=True).snapshot() if args.live
                  else mock_state())
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         render(state).save(args.out)
         print(f"wrote {args.out}")
         return 0
