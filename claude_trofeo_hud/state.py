@@ -4,6 +4,7 @@ Every section is optional: a collector that hasn't produced data yet (or has
 gone stale) leaves its section None / stale=True and the renderer degrades
 gracefully instead of crashing.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -13,8 +14,9 @@ from datetime import datetime, timedelta
 @dataclass
 class LimitGauge:
     """One rate-limit window (session or weekly)."""
+
     label: str
-    used_pct: float                 # 0..100
+    used_pct: float | None  # 0..100, or None when the server says null
     resets_at: datetime | None = None
 
 
@@ -23,11 +25,15 @@ class Limits:
     session: LimitGauge | None = None
     weekly: LimitGauge | None = None
     stale: bool = False
+    # The OAuth token expired and only Claude Code can refresh it. Distinct
+    # from `stale`: the numbers aren't late, they're unreachable until the user
+    # runs Claude Code again.
+    auth_expired: bool = False
 
 
 @dataclass
 class TokenStats:
-    today_cost_usd: float = 0.0     # hypothetical API cost
+    today_cost_usd: float = 0.0  # hypothetical API cost
     today_tokens: int = 0
     input_tokens: int = 0
     output_tokens: int = 0
@@ -44,7 +50,7 @@ class Activity:
     model: str | None = None
     active: bool = False
     last_event: datetime | None = None
-    burn_rate_tpm: float = 0.0      # tokens per minute, trailing window
+    burn_rate_tpm: float = 0.0  # tokens per minute, trailing window
     stale: bool = False
 
 
@@ -84,6 +90,30 @@ def mock_state(now: datetime | None = None) -> HudState:
             last_event=now - timedelta(seconds=8),
             burn_rate_tpm=1_240_000,
         ),
-        hourly_tokens=[0, 0, 0, 0, 0, 0, 2, 9, 14, 8, 3, 11, 18, 24, 9, 4,
-                       16, 22, 0, 0, 0, 0, 0, 0][: now.hour + 1],
+        hourly_tokens=[
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2,
+            9,
+            14,
+            8,
+            3,
+            11,
+            18,
+            24,
+            9,
+            4,
+            16,
+            22,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ][: now.hour + 1],
     )

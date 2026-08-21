@@ -63,5 +63,13 @@ See [PLANNING.md](PLANNING.md) for the full protocol notes.
 - **Empty cost/tokens** — `npx ccusage` must work in a terminal first; the
   launchd agent bakes the node path into its plist at install time, so
   re-run `install-agent` after Node upgrades.
-- **Limits stale** — Keychain access not granted, or you're logged out of
-  Claude Code.
+- **Panel shows "AUTH EXPIRED"** — the OAuth token in the Keychain has expired.
+  Only Claude Code can refresh it (the HUD deliberately won't write to that
+  Keychain item — a second writer would race Claude Code's own rotation), so
+  run Claude Code once and the HUD recovers on its next refresh. This is the
+  expected state after the daemon has been running unattended for a while with
+  no interactive Claude Code sessions.
+- **Limits stale** — Keychain access not granted, you're logged out of Claude
+  Code, or the usage endpoint is rate-limiting. Note that an expired token also
+  comes back as HTTP 429 rather than 401, which is why the HUD checks the
+  expiry timestamp locally rather than trusting the status code.
